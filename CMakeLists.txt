@@ -1,21 +1,29 @@
 cmake_minimum_required(VERSION 3.16)
-project(PeasantToKnight LANGUAGES CXX)
+project(UnlawfulKnight LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-# Find Qt (Change Qt6 to Qt5 if you are on an older Qt installation)
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+endif()
 
-add_executable(PeasantToKnight
-    main.cpp
-    GameWidget.h
-    GameWidget.cpp
+set(CMAKE_PREFIX_PATH "C:/Qt/6.11.1/mingw_64") 
+
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+
+set(SOURCES
+    src/main.cpp
+    src/MainWindow.h
+    src/MainWindow.cpp
 )
 
-target_link_libraries(PeasantToKnight PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+# Standard console executable
+add_executable(UnlawfulKnight ${SOURCES})
+
+# Prevents WinMain/qMain linking issues on MinGW while keeping console logging available
+target_link_options(UnlawfulKnight PRIVATE -mconsole)
+
+target_link_libraries(UnlawfulKnight PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)
+target_include_directories(UnlawfulKnight PRIVATE .)
