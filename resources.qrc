@@ -10,5 +10,10 @@
         <file>assets/IntroScene/Person/Person1/Person_Mid2.png</file>
         <file>assets/IntroScene/Person/Person1/Person_MidPose.png</file>
         <file>assets/IntroScene/Person/Person1/Person_EndPose.png</file>
+
+        <!-- Writer Frames -->
+        <file>assets/IntroScene/Person/Writer/Writer_NoPose.png</file>
+        <file>assets/IntroScene/Person/Writer/Writer_Walk1.png</file>
+        <file>assets/IntroScene/Person/Writer/Writer_Walk2.png</file>
     </qresource>
 </RCC>

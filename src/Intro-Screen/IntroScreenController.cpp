@@ -1,7 +1,7 @@
+// IntroScreenController.cpp
 #include "IntroScreenController.h"
 
-IntroScreenController::IntroScreenController(QObject *parent)
-    : QObject(parent) {}
+IntroScreenController::IntroScreenController(QObject *parent) : QObject(parent) {}
 
 IntroScreen* IntroScreenController::getView(QWidget *parent) {
     if (!m_introView) {
@@ -13,14 +13,16 @@ IntroScreen* IntroScreenController::getView(QWidget *parent) {
 
 void IntroScreenController::startIntroForSlot(int slotId) {
     m_activeSaveSlot = slotId;
-    // Perform any data initialization for the save slot here
 }
 
 void IntroScreenController::setupConnections() {
     if (!m_introView) return;
 
-    // Handle view back button -> signal MainWindow
     connect(m_introView, &IntroScreen::backToMenuRequested, this, [this]() {
         emit backToSaveSelectRequested();
+    });
+
+    connect(m_introView, &IntroScreen::gameStartedRequested, this, [this]() {
+        emit gameStarted(m_activeSaveSlot);
     });
 }
