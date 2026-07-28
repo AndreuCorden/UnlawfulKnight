@@ -76,9 +76,9 @@ void IntroScreen::loadAssets()
 
     for (const QString &file : peasantSequence)
     {
-        QPixmap pix(":/assets/IntroScene/Person/" + file);
+        QPixmap pix(":/assets/IntroScene/Person/Person1/" + file);
         if (pix.isNull())
-            pix.load("assets/IntroScene/Person/" + file);
+            pix.load("assets/IntroScene/Person/Person1/" + file);
 
         if (!pix.isNull())
         {

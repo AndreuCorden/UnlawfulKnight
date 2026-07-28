@@ -6,9 +6,9 @@
         <file>assets/IntroScene/Wheat_Block3.png</file>
 
         <!-- Peasant Frames -->
-        <file>assets/IntroScene/Person/Person_Start.png</file>
-        <file>assets/IntroScene/Person/Person_Mid2.png</file>
-        <file>assets/IntroScene/Person/Person_MidPose.png</file>
-        <file>assets/IntroScene/Person/Person_EndPose.png</file>
+        <file>assets/IntroScene/Person/Person1/Person_Start.png</file>
+        <file>assets/IntroScene/Person/Person1/Person_Mid2.png</file>
+        <file>assets/IntroScene/Person/Person1/Person_MidPose.png</file>
+        <file>assets/IntroScene/Person/Person1/Person_EndPose.png</file>
     </qresource>
 </RCC>
