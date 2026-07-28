@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/">
+        <file>assets/Wheat_Block.png</file>
+        <file>assets/IntroScene/Wheat_Block2.png</file>
+        <file>assets/IntroScene/Wheat_Block3.png</file>
+        <file>assets/IntroScene/Wheat_Block3.png</file>
+        <file>assets/IntroScene/Wheat_Block3.png</file>
+        <file>assets/IntroScene/Wheat_Block3.png</file>
+        <file>assets/IntroScene/Wheat_Block3.png</file>
+        <file>assets/IntroScene/Person/Person_Start.png</file>
+        <file>assets/IntroScene/Person/Person_Mid2.png</file>
+        <file>assets/IntroScene/Person/Person_MidPose.png</file>
+        <file>assets/IntroScene/Person/Person_EndPose.png</file>
+    </qresource>
+</RCC>
