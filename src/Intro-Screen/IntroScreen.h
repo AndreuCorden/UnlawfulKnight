@@ -51,11 +51,11 @@ private:
 
     // --- 3. MAP GRID & ENTITY POSITIONS ---
     QVector<QString> m_mapGrid = {
-        "wwwwwwwww",
-        "wwwwwwwww",
-        "wwwwPwwww", // Row 2, Col 4
-        "wwwwwwwww",
-        "wwwwwwwww"
+        "wwwwwwwwwww",
+        "wwwwwwwwwww",
+        "wwwwwPwwwww", // Row 2, Col 4
+        "wwwwwwwwwww",
+        "wwwwwwwwwww"
     };
 
     int m_peasantRow = 2;

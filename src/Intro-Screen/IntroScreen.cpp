@@ -102,9 +102,9 @@ void IntroScreen::loadAssets() {
     // 3. Writer Frames (0: Standing, 1: Walk1, 2: Walk2)
     QStringList writerFiles = {"Writer_NoPose.png", "Writer_Walk1.png", "Writer_Walk2.png"};
     for (const QString &file : writerFiles) {
-        QPixmap pix(":/assets/IntroScene/Writer/" + file);
-        if (pix.isNull()) pix.load("assets/IntroScene/Writer/" + file);
-        if (pix.isNull()) pix.load("assets/IntroScene/" + file);
+        QPixmap pix(":/assets/IntroScene/Person/Writer/" + file);
+        if (pix.isNull()) pix.load("assets/IntroScene/Person/Writer/" + file);
+        if (pix.isNull()) pix.load("assets/IntroScene/Person/" + file);
         if (!pix.isNull()) m_writerFrames.append(pix);
     }
 }
@@ -224,8 +224,8 @@ void IntroScreen::triggerPlowAction() {
 }
 
 void IntroScreen::startWriterArrival() {
-    m_characterText->hide();
     m_currentState = WriterWalking;
+    m_characterText->hide();
     m_promptLabel->hide();
     m_writerColPos = -1.5; // Start walking from off-screen left
     m_writerWalkTimer->start(120);
