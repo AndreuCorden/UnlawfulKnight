@@ -5,82 +5,134 @@
 #include <QPushButton>
 #include <QDebug>
 
-IntroScreen::IntroScreen(QWidget *parent) : QWidget(parent) {
+IntroScreen::IntroScreen(QWidget *parent) : QWidget(parent)
+{
+    setFocusPolicy(Qt::StrongFocus);
+
     loadAssets();
     setupUI();
 
-    // 150ms delay creates a smooth pixel-art animation loop
-    animTimer = new QTimer(this);
-    connect(animTimer, &QTimer::timeout, this, [this]() {
-        if (!wheatFrames.isEmpty()) {
-            currentFrameIndex = (currentFrameIndex + 1) % wheatFrames.size();
-            update(); // Trigger repaint with the next frame
-        }
-    });
-    animTimer->start(150);
+    // 1. Wind Wave Timer (Advances wind motion across field)
+    m_wheatAnimTimer = new QTimer(this);
+    connect(m_wheatAnimTimer, &QTimer::timeout, this, [this]()
+            {
+                m_windTick++;
+                update(); // Re-render grid with shifted wind phase
+            });
+    m_wheatAnimTimer->start(300); // Wind wave speed in milliseconds
+
+    // 2. Peasant Scythe Swing Timer
+    m_plowAnimTimer = new QTimer(this);
+    connect(m_plowAnimTimer, &QTimer::timeout, this, [this]()
+            {
+        if (m_isPlowing && !m_peasantFrames.isEmpty()) {
+            m_currentPeasantFrame++;
+            if (m_currentPeasantFrame >= m_peasantFrames.size()) {
+                m_currentPeasantFrame = 0;
+                m_isPlowing = false;
+                m_plowAnimTimer->stop();
+            }
+            update();
+        } });
 }
 
-void IntroScreen::loadAssets() {
-    wheatFrames.clear();
+void IntroScreen::loadAssets()
+{
+    m_wheatFrames.clear();
+    m_peasantFrames.clear();
 
-    // List of frame file names in your assets folder
-    QStringList frameNames = {
-        "Wheat-Block.png",
-        "Wheat_Bloc2.png",
-        "Wheat_Bloc3.png"
-    };
+    // --- 1. Load Wheat Frames ---
+    QStringList wheatFiles = {
+        "Wheat_Block.png",
+        "Wheat_Block2.png",
+        "Wheat_Block3.png"};
 
-    for (const QString &name : frameNames) {
-        QPixmap pix;
+    for (const QString &file : wheatFiles)
+    {
+        QPixmap pix(":/assets/IntroScene/" + file);
+        if (pix.isNull())
+            pix.load("assets/IntroScene/" + file);
 
-        // 1. Try QRC resource path
-        pix.load(":/assets/" + name);
-
-        // 2. Fallbacks if QRC path differs or running loose build
-        if (pix.isNull()) {
-            // Check alternate spelling for frame 1 if needed
-            if (name == "Wheat-Block.png") {
-                pix.load(":/assets/Wheat_Block.png");
-            }
+        if (!pix.isNull())
+        {
+            m_wheatFrames.append(pix);
         }
-        if (pix.isNull()) pix.load("assets/" + name);
-        if (pix.isNull()) pix.load(name);
+        else
+        {
+            qWarning() << "[ERROR] Could not load wheat asset:" << file;
+        }
+    }
 
-        if (!pix.isNull()) {
-            wheatFrames.append(pix);
-            qDebug() << "[SUCCESS] Loaded frame:" << name;
-        } else {
-            qWarning() << "[WARNING] Could not load animation frame:" << name;
+    // --- 2. Load Peasant Frames in Exact Sequence: ---
+    // Sequence: End -> Mid -> Mid2 -> Start -> Mid2 -> Mid -> End
+    QStringList peasantSequence = {
+        "Person_EndPose.png",
+        "Person_MidPose.png",
+        "Person_Mid2.png",
+        "Person_Start.png",
+        "Person_Mid2.png",
+        "Person_MidPose.png",
+        "Person_EndPose.png"};
+
+    for (const QString &file : peasantSequence)
+    {
+        QPixmap pix(":/assets/IntroScene/Person/" + file);
+        if (pix.isNull())
+            pix.load("assets/IntroScene/Person/" + file);
+
+        if (!pix.isNull())
+        {
+            m_peasantFrames.append(pix);
+        }
+        else
+        {
+            qWarning() << "[ERROR] Could not load peasant frame:" << file;
         }
     }
 }
 
-void IntroScreen::setupUI() {
+void IntroScreen::setupUI()
+{
     QVBoxLayout *outerLayout = new QVBoxLayout(this);
-    outerLayout->setAlignment(Qt::AlignCenter);
+    outerLayout->setContentsMargins(20, 20, 20, 20);
 
-    // Story box overlay
+    m_promptLabel = new QLabel("[ SPACE ] To Swing Scythe", this);
+    m_promptLabel->setAlignment(Qt::AlignCenter);
+    m_promptLabel->setStyleSheet(R"(
+        QLabel {
+            background-color: rgba(20, 18, 15, 210);
+            color: #f0c050;
+            font-size: 18px;
+            font-weight: bold;
+            border: 2px solid #8c6d46;
+            border-radius: 6px;
+            padding: 10px 20px;
+        }
+    )");
+
+    outerLayout->addWidget(m_promptLabel, 0, Qt::AlignHCenter | Qt::AlignTop);
+    outerLayout->addStretch();
+
     QWidget *storyBox = new QWidget(this);
-    storyBox->setFixedWidth(650);
+    storyBox->setFixedWidth(600);
     storyBox->setStyleSheet(R"(
         QWidget {
-            background-color: rgba(20, 18, 15, 230);
+            background-color: rgba(20, 18, 15, 225);
             border: 2px solid #5a4b3c;
             border-radius: 8px;
-            padding: 25px;
+            padding: 20px;
         }
         QLabel {
             color: #dcdcdc;
-            font-size: 16px;
-            line-height: 1.5;
+            font-size: 15px;
         }
         QPushButton {
             background-color: #3d3126;
             color: #e0e0e0;
             border: 1px solid #8c6d46;
             border-radius: 4px;
-            padding: 10px 20px;
-            font-size: 16px;
+            padding: 8px 16px;
+            font-size: 15px;
             font-weight: bold;
         }
         QPushButton:hover {
@@ -90,62 +142,139 @@ void IntroScreen::setupUI() {
     )");
 
     QVBoxLayout *storyLayout = new QVBoxLayout(storyBox);
-    storyLayout->setSpacing(15);
+    storyLayout->setSpacing(12);
 
     QLabel *title = new QLabel("The Peasant's Tale Begins", storyBox);
-    title->setStyleSheet("font-size: 26px; font-weight: bold; color: #c49a45; border: none; padding: 0;");
+    title->setStyleSheet("font-size: 22px; font-weight: bold; color: #c49a45; border: none;");
     title->setAlignment(Qt::AlignCenter);
 
     QLabel *storyText = new QLabel(
         "You stand in the scorching sun, weary from another day in the fields. "
-        "A travelling chronicler approaches, resting along the dusty road.<br><br>"
-        "<i>\"A man of your vigor wasted on wheat?\"</i> he muses. "
-        "<i>\"I can forge you a certificate of knighthood... if you allow me to record your journey into legend.\"</i>",
-        storyBox
-    );
+        "A travelling chronicler approaches along the dusty road...",
+        storyBox);
     storyText->setWordWrap(true);
-    storyText->setStyleSheet("border: none; padding: 0;");
+    storyText->setStyleSheet("border: none;");
 
     QPushButton *continueBtn = new QPushButton("Accept Offer & Begin", storyBox);
     QPushButton *backBtn = new QPushButton("Back to Save Select", storyBox);
 
     storyLayout->addWidget(title);
     storyLayout->addWidget(storyText);
-    storyLayout->addSpacing(15);
     storyLayout->addWidget(continueBtn);
     storyLayout->addWidget(backBtn);
 
-    outerLayout->addWidget(storyBox);
+    outerLayout->addWidget(storyBox, 0, Qt::AlignHCenter | Qt::AlignBottom);
 
     connect(backBtn, &QPushButton::clicked, this, &IntroScreen::backToMenuRequested);
+}
+
+void IntroScreen::triggerPlowAction()
+{
+    if (!m_isPlowing && !m_peasantFrames.isEmpty())
+    {
+        m_isPlowing = true;
+        m_currentPeasantFrame = 0;
+        m_plowAnimTimer->start(125);
+    }
+}
+
+void IntroScreen::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Space)
+    {
+        triggerPlowAction();
+    }
+    else
+    {
+        QWidget::keyPressEvent(event);
+    }
 }
 
 void IntroScreen::paintEvent(QPaintEvent *event) {
     Q_UNUSED(event);
 
     QPainter painter(this);
-
-    // Soil background behind wheat tiles
-    painter.fillRect(rect(), QColor(25, 18, 12));
-
-    if (wheatFrames.isEmpty()) return;
-
-    // Crisp pixel art rendering
     painter.setRenderHint(QPainter::SmoothPixmapTransform, false);
 
-    const QPixmap &currentTile = wheatFrames[currentFrameIndex];
+    // Dark soil background coat
+    painter.fillRect(rect(), QColor(25, 18, 12));
 
-    // Native scale (1 = 100% size). Change to 1.5 or 2 if you want it slightly chunkier
-    double scale = 0.5;
-    int tileW = static_cast<int>(currentTile.width() * scale);
-    int tileH = static_cast<int>(currentTile.height() * scale);
+    if (m_wheatFrames.isEmpty() || m_mapGrid.isEmpty()) return;
 
-    if (tileW <= 0 || tileH <= 0) return;
+    int gridRows = m_mapGrid.size();
+    int gridCols = m_mapGrid[0].length();
 
-    // Tile across the screen area
-    for (int y = 0; y < height(); y += tileH) {
-        for (int x = 0; x < width(); x += tileW) {
-            painter.drawPixmap(x, y, tileW, tileH, currentTile);
+    // Base dimensions from raw image asset
+    int baseW = m_wheatFrames[0].width();
+    int baseH = m_wheatFrames[0].height();
+
+    // Overlap percentage (15% of sprite height overlaps with the row above it)
+    double overlapRatio = 0.15;
+
+    // Calculate effective unscaled grid dimensions with overlap included
+    double unscaledGridW = gridCols * baseW;
+    double unscaledGridH = (gridRows * baseH * (1.0 - overlapRatio)) + (baseH * overlapRatio);
+
+    // Calculate dynamic scale factor to fit window screen
+    double scaleX = static_cast<double>(width()) / unscaledGridW;
+    double scaleY = static_cast<double>(height()) / unscaledGridH;
+    double scale = qMin(scaleX, scaleY); // Preserve aspect ratio
+
+    // Scaled tile dimensions
+    int tileW = static_cast<int>(baseW * scale);
+    int tileH = static_cast<int>(baseH * scale);
+
+    // Stride is the vertical step distance between rows
+    int overlapY = static_cast<int>(tileH * overlapRatio);
+    int strideY = tileH - overlapY;
+
+    // Centering calculations
+    int totalWidth = gridCols * tileW;
+    int totalHeight = (gridRows * strideY) + overlapY;
+
+    int startX = (width() - totalWidth) / 2;
+    int startY = (height() - totalHeight) / 2;
+
+    const QPixmap &currentPeasant = m_peasantFrames.isEmpty() ? QPixmap() : m_peasantFrames[m_currentPeasantFrame];
+
+    // -------------------------------------------------------------
+    // RENDER LOOP (Top-to-Bottom for natural overlap & depth)
+    // -------------------------------------------------------------
+    for (int row = 0; row < gridRows; ++row) {
+        for (int col = 0; col < gridCols; ++col) {
+
+            // --- WIND DIRECTION FORMULA ---
+            // (col + row): Wind sweeps diagonally from top-left to bottom-right
+            // Change to (col) for left-to-right wind, or (row) for top-to-bottom wind
+            int waveOffset = col + (row / 2);
+            int phase = (m_windTick + waveOffset) % m_wheatSequence.size();
+            int frameIdx = m_wheatSequence[phase];
+
+            const QPixmap &currentWheat = m_wheatFrames[frameIdx];
+
+            int drawX = startX + (col * tileW);
+            int drawY = startY + (row * strideY) - overlapY;
+
+            QChar tileType = m_mapGrid[row][col];
+
+            if (tileType == 'w') {
+                painter.drawPixmap(drawX, drawY, tileW, tileH, currentWheat);
+            } 
+            else if (tileType == 'P') {
+                // Ground tile underneath peasant
+                painter.drawPixmap(drawX, drawY, tileW, tileH, currentWheat);
+
+                // Draw Peasant
+                if (!currentPeasant.isNull()) {
+                    int pW = static_cast<int>(currentPeasant.width() * scale);
+                    int pH = static_cast<int>(currentPeasant.height() * scale);
+
+                    int playerX = drawX + (tileW - pW) / 2;
+                    int playerY = drawY + (tileH - pH);
+
+                    painter.drawPixmap(playerX, playerY, pW, pH, currentPeasant);
+                }
+            }
         }
     }
 }
