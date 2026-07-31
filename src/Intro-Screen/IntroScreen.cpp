@@ -22,14 +22,24 @@ IntroScreen::IntroScreen(QWidget *parent) : QWidget(parent) {
     // 2. Peasant Scythe Animation Timer
     m_plowAnimTimer = new QTimer(this);
     connect(m_plowAnimTimer, &QTimer::timeout, this, [this]() {
-        if (m_isPlowing && !m_peasantFrames.isEmpty()) {
+        if (m_isPlowing && !m_peasantFrames.isEmpty() && m_currentPeasantFrame < (m_peasantFrames.size() - 1)) {
             m_currentPeasantFrame++;
-            if (m_currentPeasantFrame >= m_peasantFrames.size()) {
+            if (m_currentPeasantFrame >= (m_peasantFrames.size() - 3)) {
                 m_currentPeasantFrame = 0;
                 m_isPlowing = false;
                 m_plowAnimTimer->stop();
             }
             update();
+        }
+    });
+
+    m_dropTimer = new QTimer(this);
+    connect(m_dropTimer, &QTimer::timeout, this, [this](){
+        m_currentPeasantFrame++;
+        if (!m_peasantFrames.empty() && m_currentPeasantFrame >= m_peasantFrames.size())
+        {
+            m_currentPeasantFrame--;
+            m_dropTimer->stop();
         }
     });
 
@@ -91,7 +101,8 @@ void IntroScreen::loadAssets() {
     // 2. Peasant Frames
     QStringList peasantSeq = {
         "Person_EndPose.png", "Person_MidPose.png", "Person_Mid2.png",
-        "Person_Start.png",   "Person_Mid2.png",   "Person_MidPose.png", "Person_EndPose.png"
+        "Person_Start.png",   "Person_Mid2.png",   "Person_MidPose.png", "Person_EndPose.png",
+        "Person_Drop1", "Person_Drop2", "Person_Drop3"
     };
     for (const QString &file : peasantSeq) {
         QPixmap pix(":/assets/IntroScene/Person/Person1/" + file);
@@ -227,6 +238,8 @@ void IntroScreen::startWriterArrival() {
     m_currentState = WriterWalking;
     m_characterText->hide();
     m_promptLabel->hide();
+    m_currentPeasantFrame = m_peasantFrames.size() - 4;
+    m_dropTimer->start(125);
     m_writerColPos = -1.5; // Start walking from off-screen left
     m_writerWalkTimer->start(120);
 }

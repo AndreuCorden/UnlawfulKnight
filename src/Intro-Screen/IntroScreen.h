@@ -43,7 +43,7 @@ private:
 
     // --- 2. ASSETS & ANIMATION SEQUENCES ---
     QVector<QPixmap> m_wheatFrames;
-    QVector<QPixmap> m_writerFrames;   // 0: Stand/NoPose, 1: Walk1, 2: Walk2
+    QVector<QPixmap> m_writerFrames;
     QVector<QPixmap> m_peasantFrames;
 
     QVector<int> m_wheatSequence = {0, 1, 2, 1};
@@ -86,6 +86,7 @@ private:
     QTimer *m_wheatAnimTimer = nullptr;
     QTimer *m_plowAnimTimer = nullptr;
     QTimer *m_writerWalkTimer = nullptr;
+    QTimer *m_dropTimer = nullptr;
 
     // --- 7. UI COMPONENTS ---
     QLabel *m_promptLabel = nullptr;

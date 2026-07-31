@@ -10,6 +10,9 @@
         <file>assets/IntroScene/Person/Person1/Person_Mid2.png</file>
         <file>assets/IntroScene/Person/Person1/Person_MidPose.png</file>
         <file>assets/IntroScene/Person/Person1/Person_EndPose.png</file>
+        <file>assets/IntroScene/Person/Person1/Person_Drop1.png</file>
+        <file>assets/IntroScene/Person/Person1/Person_Drop2.png</file>
+        <file>assets/IntroScene/Person/Person1/Person_Drop3.png</file>
 
         <!-- Writer Frames -->
         <file>assets/IntroScene/Person/Writer/Writer_NoPose.png</file>
