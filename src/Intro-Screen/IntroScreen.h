@@ -47,7 +47,7 @@ private:
     QVector<QPixmap> m_peasantFrames;
 
     QVector<int> m_wheatSequence = {0, 1, 2, 1};
-    QVector<int> m_writerSequence = {0, 1, 0, 2}; // 0 -> 1 -> 0 -> 2 walk loop
+    QVector<int> m_writerSequence = {0, 1, 0, 2, 3}; // 0 -> 1 -> 0 -> 2 walk loop,
 
     // --- 3. MAP GRID & ENTITY POSITIONS ---
     QVector<QString> m_mapGrid = {
@@ -70,6 +70,7 @@ private:
     int m_swingCount = 0;
     int m_currentPeasantFrame = 0;
     bool m_isPlowing = false;
+    bool m_hasSpoken = false;
 
     // Story text shown after each scythe swing
     const QVector<QString> m_plowNarrative = {

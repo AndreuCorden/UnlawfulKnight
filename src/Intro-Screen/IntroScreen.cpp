@@ -48,17 +48,22 @@ IntroScreen::IntroScreen(QWidget *parent) : QWidget(parent) {
     connect(m_writerWalkTimer, &QTimer::timeout, this, [this]() {
         double targetCol = m_peasantCol + 1.5; // Stops right near peasant
 
+        if ( !m_hasSpoken && targetCol - m_writerColPos < 0.25)
+        {
+            m_hasSpoken = true;
+            m_storyBox->show();
+            advanceDialogue();
+        }
+
         if (m_writerColPos < targetCol) {
             m_writerColPos += 0.08; // Step speed
-            m_writerSeqIdx = (m_writerSeqIdx + 1) % m_writerSequence.size();
+            m_writerSeqIdx = (m_writerSeqIdx + 1) % (m_writerSequence.size() - 1);
             update();
         } else {
             // Writer arrived
-            m_writerWalkTimer->stop();
-            m_writerSeqIdx = 0; // Stand still (Writer_NoPose)
             m_currentState = DialoguePhase;
-            m_storyBox->show();
-            advanceDialogue();
+            m_writerWalkTimer->stop();
+            m_writerSeqIdx = m_writerSequence.size() - 1; // Stand still mirrored (Writer_NoPose)
             update();
         }
     });
@@ -110,7 +115,7 @@ void IntroScreen::loadAssets() {
         if (!pix.isNull()) m_peasantFrames.append(pix);
     }
 
-    // 3. Writer Frames (0: Standing, 1: Walk1, 2: Walk2)
+    // 3. Writer Frames (0: Standing, 1: Walk1, 2: Walk2, 3: Mirror of Standing)
     QStringList writerFiles = {"Writer_NoPose.png", "Writer_Walk1.png", "Writer_Walk2.png"};
     for (const QString &file : writerFiles) {
         QPixmap pix(":/assets/IntroScene/Person/Writer/" + file);
@@ -118,6 +123,7 @@ void IntroScreen::loadAssets() {
         if (pix.isNull()) pix.load("assets/IntroScene/Person/" + file);
         if (!pix.isNull()) m_writerFrames.append(pix);
     }
+    m_writerFrames.append(QPixmap::fromImage(m_writerFrames[0].toImage().flipped(Qt::Horizontal)));
 }
 
 void IntroScreen::setupUI() {
