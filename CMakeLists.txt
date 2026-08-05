@@ -18,12 +18,22 @@ set(SOURCES
     src/main.cpp
     src/MainWindow.h
     src/MainWindow.cpp
+    src/Player.h
+    src/Player.cpp
+    src/GameController.h
+    src/GameController.cpp
     src/Intro-Screen/IntroScreen.h
     src/Intro-Screen/IntroScreen.cpp
     src/Intro-Screen/IntroScreenController.h
     src/Intro-Screen/IntroScreenController.cpp
     src/Intro-Screen/NameEntryWidget.h
     src/Intro-Screen/NameEntryWidget.cpp
+    src/Worlds/BaseWorld.h
+    src/Worlds/BaseWorld.cpp
+    src/Worlds/WorldId.h
+    src/Worlds/WorldId.cpp
+    src/Worlds/World-0/World0.h
+    src/Worlds/World-0/World0.cpp
 )
 
 # Standard console executable

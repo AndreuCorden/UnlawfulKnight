@@ -44,10 +44,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     stackedWidget = new QStackedWidget(this);
     setCentralWidget(stackedWidget);
 
-    m_introController = new IntroScreenController(this);
+    m_gameController = new GameController(stackedWidget, this);
 
     // Return to Save Selection when controller requests it
-    connect(m_introController, &IntroScreenController::backToSaveSelectRequested, [this]() {
+    connect(m_gameController, &GameController::returnToSaveSelectRequested, [this]() {
         stackedWidget->setCurrentIndex(1);
     });
 
@@ -66,22 +66,6 @@ QPushButton *MainWindow::createMenuButton(const QString &text)
     btn->setFixedWidth(260);
     btn->setCursor(Qt::PointingHandCursor);
     return btn;
-}
-
-void MainWindow::launchIntroScreen(int slotId)
-{
-    // 1. Notify controller which slot was selected
-    m_introController->startIntroForSlot(slotId);
-
-    // 2. Retrieve view from controller
-    IntroScreen *view = m_introController->getView(this);
-
-    // 3. Add to QStackedWidget if not present, then display
-    if (stackedWidget->indexOf(view) == -1) {
-        stackedWidget->addWidget(view);
-    }
-    
-    stackedWidget->setCurrentWidget(view);
 }
 
 // --- MAIN MENU SCREEN ---
@@ -166,10 +150,9 @@ QWidget *MainWindow::createSaveSelectScreen()
 
     outerLayout->addWidget(menuBox);
 
-    // Save slots call launchIntroScreen via controller
-    connect(save1, &QPushButton::clicked, [this]() { launchIntroScreen(1); });
-    connect(save2, &QPushButton::clicked, [this]() { launchIntroScreen(2); });
-    connect(save3, &QPushButton::clicked, [this]() { launchIntroScreen(3); });
+    connect(save1, &QPushButton::clicked, [this]() { m_gameController->startNewGame(1); });
+    connect(save2, &QPushButton::clicked, [this]() { m_gameController->startNewGame(2); });
+    connect(save3, &QPushButton::clicked, [this]() { m_gameController->startNewGame(3); });
     connect(backBtn, &QPushButton::clicked, [this]() { stackedWidget->setCurrentIndex(0); });
 
     return screen;

@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <QtWidgets>
-#include "src/Intro-Screen/IntroScreenController.h"
+#include "src/GameController.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -13,16 +13,13 @@ public:
 
 private:
     QStackedWidget *stackedWidget;
-    IntroScreenController *m_introController;
+    GameController *m_gameController;
 
     // Screen setup methods
     QWidget *createMainMenuScreen();
     QWidget *createSaveSelectScreen();
     QWidget *createInstructionsScreen();
     QWidget *createCreditsScreen();
-
-    // Helper to request intro launch from controller
-    void launchIntroScreen(int slotId);
 
     // UI helper method
     QPushButton *createMenuButton(const QString &text);
