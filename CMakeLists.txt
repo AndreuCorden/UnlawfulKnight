@@ -22,6 +22,8 @@ set(SOURCES
     src/Intro-Screen/IntroScreen.cpp
     src/Intro-Screen/IntroScreenController.h
     src/Intro-Screen/IntroScreenController.cpp
+    src/Intro-Screen/NameEntryWidget.h
+    src/Intro-Screen/NameEntryWidget.cpp
 )
 
 # Standard console executable
