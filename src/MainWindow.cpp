@@ -7,7 +7,7 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
-    // 1. Frameless Window setup as requested
+    // 1. Frameless Window setup
     setWindowFlags(Qt::FramelessWindowHint | Qt::Window);
     showFullScreen();
 
@@ -40,18 +40,22 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
         }
     )");
 
-    // 3. Stacked Widget for Page Navigation
+    // 3. Controller & Navigation Setup
     stackedWidget = new QStackedWidget(this);
     setCentralWidget(stackedWidget);
 
-    // Index 0: Main Menu
-    // Index 1: Save Selection
-    // Index 2: Instructions
-    // Index 3: Credits
-    stackedWidget->addWidget(createMainMenuScreen());
-    stackedWidget->addWidget(createSaveSelectScreen());
-    stackedWidget->addWidget(createInstructionsScreen());
-    stackedWidget->addWidget(createCreditsScreen());
+    m_introController = new IntroScreenController(this);
+
+    // Return to Save Selection when controller requests it
+    connect(m_introController, &IntroScreenController::backToSaveSelectRequested, [this]() {
+        stackedWidget->setCurrentIndex(1);
+    });
+
+    // Static Pages Setup
+    stackedWidget->addWidget(createMainMenuScreen());   // Index 0
+    stackedWidget->addWidget(createSaveSelectScreen()); // Index 1
+    stackedWidget->addWidget(createInstructionsScreen());// Index 2
+    stackedWidget->addWidget(createCreditsScreen());   // Index 3
 
     stackedWidget->setCurrentIndex(0);
 }
@@ -64,23 +68,36 @@ QPushButton *MainWindow::createMenuButton(const QString &text)
     return btn;
 }
 
+void MainWindow::launchIntroScreen(int slotId)
+{
+    // 1. Notify controller which slot was selected
+    m_introController->startIntroForSlot(slotId);
+
+    // 2. Retrieve view from controller
+    IntroScreen *view = m_introController->getView(this);
+
+    // 3. Add to QStackedWidget if not present, then display
+    if (stackedWidget->indexOf(view) == -1) {
+        stackedWidget->addWidget(view);
+    }
+    
+    stackedWidget->setCurrentWidget(view);
+}
+
 // --- MAIN MENU SCREEN ---
 QWidget *MainWindow::createMainMenuScreen()
 {
     QWidget *screen = new QWidget(this);
 
-    // 1. Outer layout centers the entire menu container on the screen
     QVBoxLayout *outerLayout = new QVBoxLayout(screen);
     outerLayout->setAlignment(Qt::AlignCenter);
 
-    // 2. Inner menu container
     QWidget *menuBox = new QWidget(screen);
     QVBoxLayout *menuLayout = new QVBoxLayout(menuBox);
     menuLayout->setAlignment(Qt::AlignCenter);
     menuLayout->setSpacing(15);
     menuLayout->setContentsMargins(0, 0, 0, 0);
 
-    // 3. Title Label
     QLabel *title = new QLabel("UNLAWFUL KNIGHT", menuBox);
     title->setStyleSheet("font-size: 34px; font-weight: bold; color: #c49a45; margin-bottom: 20px;");
     title->setAlignment(Qt::AlignCenter);
@@ -90,14 +107,12 @@ QWidget *MainWindow::createMainMenuScreen()
     QPushButton *creditsBtn = createMenuButton("Credits");
     QPushButton *exitBtn = createMenuButton("Exit Game");
 
-    // 4. Set button width wider than the title (~400px wide text)
     int menuWidth = 480;
     playBtn->setFixedWidth(menuWidth);
     instructionsBtn->setFixedWidth(menuWidth);
     creditsBtn->setFixedWidth(menuWidth);
     exitBtn->setFixedWidth(menuWidth);
 
-    // Add widgets to menu
     menuLayout->addWidget(title);
     menuLayout->addWidget(playBtn);
     menuLayout->addWidget(instructionsBtn);
@@ -106,13 +121,9 @@ QWidget *MainWindow::createMainMenuScreen()
 
     outerLayout->addWidget(menuBox);
 
-    // Button connections
-    connect(playBtn, &QPushButton::clicked, [this]()
-            { stackedWidget->setCurrentIndex(1); });
-    connect(instructionsBtn, &QPushButton::clicked, [this]()
-            { stackedWidget->setCurrentIndex(2); });
-    connect(creditsBtn, &QPushButton::clicked, [this]()
-            { stackedWidget->setCurrentIndex(3); });
+    connect(playBtn, &QPushButton::clicked, [this]() { stackedWidget->setCurrentIndex(1); });
+    connect(instructionsBtn, &QPushButton::clicked, [this]() { stackedWidget->setCurrentIndex(2); });
+    connect(creditsBtn, &QPushButton::clicked, [this]() { stackedWidget->setCurrentIndex(3); });
     connect(exitBtn, &QPushButton::clicked, qApp, &QApplication::quit);
 
     return screen;
@@ -155,8 +166,11 @@ QWidget *MainWindow::createSaveSelectScreen()
 
     outerLayout->addWidget(menuBox);
 
-    connect(backBtn, &QPushButton::clicked, [this]()
-            { stackedWidget->setCurrentIndex(0); });
+    // Save slots call launchIntroScreen via controller
+    connect(save1, &QPushButton::clicked, [this]() { launchIntroScreen(1); });
+    connect(save2, &QPushButton::clicked, [this]() { launchIntroScreen(2); });
+    connect(save3, &QPushButton::clicked, [this]() { launchIntroScreen(3); });
+    connect(backBtn, &QPushButton::clicked, [this]() { stackedWidget->setCurrentIndex(0); });
 
     return screen;
 }
@@ -205,8 +219,7 @@ QWidget *MainWindow::createInstructionsScreen()
     layout->addStretch();
     layout->addWidget(backBtn, 0, Qt::AlignCenter);
 
-    connect(backBtn, &QPushButton::clicked, [this]()
-            { stackedWidget->setCurrentIndex(0); });
+    connect(backBtn, &QPushButton::clicked, [this]() { stackedWidget->setCurrentIndex(0); });
 
     return screen;
 }
@@ -232,8 +245,7 @@ QWidget *MainWindow::createCreditsScreen()
     layout->addSpacing(30);
     layout->addWidget(backBtn);
 
-    connect(backBtn, &QPushButton::clicked, [this]()
-            { stackedWidget->setCurrentIndex(0); });
+    connect(backBtn, &QPushButton::clicked, [this]() { stackedWidget->setCurrentIndex(0); });
 
     return screen;
 }

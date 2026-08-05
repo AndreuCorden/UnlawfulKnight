@@ -14,9 +14,16 @@ set(CMAKE_PREFIX_PATH "C:/Qt/6.11.1/mingw_64")
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
 set(SOURCES
+    resources.qrc
     src/main.cpp
     src/MainWindow.h
     src/MainWindow.cpp
+    src/Intro-Screen/IntroScreen.h
+    src/Intro-Screen/IntroScreen.cpp
+    src/Intro-Screen/IntroScreenController.h
+    src/Intro-Screen/IntroScreenController.cpp
+    src/Intro-Screen/NameEntryWidget.h
+    src/Intro-Screen/NameEntryWidget.cpp
 )
 
 # Standard console executable
