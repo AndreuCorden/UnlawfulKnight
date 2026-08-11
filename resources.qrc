@@ -18,5 +18,8 @@
         <file>assets/IntroScene/Person/Writer/Writer_NoPose.png</file>
         <file>assets/IntroScene/Person/Writer/Writer_Walk1.png</file>
         <file>assets/IntroScene/Person/Writer/Writer_Walk2.png</file>
+
+        <!-- World0 Frames -->
+        <file>assets/Worlds/World0/World-0Dirtpath.png</file>
     </qresource>
 </RCC>

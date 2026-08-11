@@ -16,7 +16,7 @@ public:
     ~GameController();
 
     void startNewGame(int saveSlotId);
-    void loadWorld(WorldId worldId, double startX = 5.0, double startY = 5.0);
+    void loadWorld(WorldId worldId, double startX, double startY);
 
 signals:
     void returnToSaveSelectRequested();

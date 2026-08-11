@@ -46,7 +46,7 @@ void GameController::showNameEntry() {
             m_player = new Player(characterName);
 
             // Entry point into the game world array: World0
-            loadWorld(WorldId::World0, 5.0, 5.0);
+            loadWorld(WorldId::World0, 2, 27);
         });
     }
 
