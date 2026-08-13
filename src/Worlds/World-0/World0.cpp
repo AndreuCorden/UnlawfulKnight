@@ -12,10 +12,10 @@ World0::World0(Player *player, QWidget *parent)
     m_gridRows = m_mapGrid.size();
     m_gridCols = m_mapGrid.isEmpty() ? 0 : m_mapGrid[0].length();
 
-    // Load the spritesheet (Ensure path matches your Qt resource file or assets folder)
-    if (!m_mapSquares.load(":assets/Worlds/World0/World-0Dirtpath.png")) {
-        // Error, failed to load.
-    }
+    // Load assets
+    m_mapSquares.load(":assets/Worlds/World0/World-0Dirtpath.png");
+    m_playerFrames.load(":assets/Worlds/PlayerWalkingFarmerAnim.png");
+    m_writerFrames.load(":assets/Worlds/WriterWalkingAnim.png");
 
     m_gameLoopTimer = new QTimer(this);
     connect(m_gameLoopTimer, &QTimer::timeout, this, [this]() {
@@ -32,6 +32,10 @@ World0::World0(Player *player, QWidget *parent)
 void World0::setPlayerPosition(double tileX, double tileY) {
     m_playerX = tileX;
     m_playerY = tileY;
+    
+    // Position writer behind player on reset
+    m_writerX = tileX;
+    m_writerY = tileY + 0.85;
 }
 
 void World0::keyPressEvent(QKeyEvent *event) {
@@ -47,6 +51,7 @@ void World0::keyReleaseEvent(QKeyEvent *event) {
 }
 
 void World0::updateMovement() {
+    // 1. Calculate Player Movement
     double dx = 0;
     double dy = 0;
 
@@ -60,6 +65,11 @@ void World0::updateMovement() {
         dy *= 0.7071;
     }
 
+    m_isPlayerMoving = (dx != 0 || dy != 0);
+    if (m_isPlayerMoving) {
+        m_playerAnimTick++;
+    }
+
     double nextX = m_playerX + dx;
     double nextY = m_playerY + dy;
 
@@ -71,6 +81,25 @@ void World0::updateMovement() {
 
     m_playerX = qBound(0.0, nextX, m_gridCols - 1.0);
     m_playerY = qBound(0.0, nextY, m_gridRows - 1.0);
+
+    // 2. Writer Following Logic
+    double followDist = qHypot(m_playerX - m_writerX, m_playerY - m_writerY);
+    double targetTrailingDistance = 0.85; // Distance to maintain behind player
+
+    if (followDist > targetTrailingDistance) {
+        double dirX = (m_playerX - m_writerX) / followDist;
+        double dirY = (m_playerY - m_writerY) / followDist;
+
+        // Smoothly adjust writer speed based on distance gap
+        double stepSpeed = qMin(m_moveSpeed, followDist - targetTrailingDistance + 0.01);
+        m_writerX += dirX * stepSpeed;
+        m_writerY += dirY * stepSpeed;
+
+        m_isWriterMoving = true;
+        m_writerAnimTick++;
+    } else {
+        m_isWriterMoving = false;
+    }
 }
 
 QPixmap World0::getTilePixmap(char tileType) const {
@@ -96,6 +125,17 @@ QPixmap World0::getTilePixmap(char tileType) const {
     }
 
     return m_mapSquares.copy(srcX, srcY, 8, 8);
+}
+
+QPixmap World0::getAnimationFrame(const QPixmap &sheet, int frameIndex) const {
+    if (sheet.isNull()) return QPixmap();
+
+    int totalFrames = 5;
+    int frameWidth = sheet.width() / totalFrames; // 95 / 5 = 19px
+    int frameHeight = sheet.height();             // 49px
+
+    frameIndex = qBound(0, frameIndex, totalFrames - 1);
+    return sheet.copy(frameIndex * frameWidth, 0, frameWidth, frameHeight);
 }
 
 void World0::paintEvent(QPaintEvent *event) {
@@ -132,34 +172,74 @@ void World0::paintEvent(QPaintEvent *event) {
             
             double drawX = (c - cameraX) * tileW;
             double drawY = (r - cameraY) * tileH;
-            QRectF drawRect(drawX, drawY, tileW + 0.5, tileH + 0.5); // +0.5 prevents subpixel gaps
+            QRectF drawRect(drawX, drawY, tileW + 0.5, tileH + 0.5);
 
             QPixmap tileImg = getTilePixmap(tileType);
             if (!tileImg.isNull()) {
                 painter.drawPixmap(drawRect, tileImg, tileImg.rect());
             } else {
-                // Fallback coloring if image is not loaded
                 QColor fallback = (tileType == '0') ? QColor(220, 200, 50) : QColor(100, 60, 30);
                 painter.fillRect(drawRect, fallback);
             }
         }
     }
 
-    // 4. Render Player (Relative to Camera)
-    double playerDrawX = (m_playerX - cameraX) * tileW;
-    double playerDrawY = (m_playerY - cameraY) * tileH;
+    // 4. Determine Character Animation Frames
+    int playerFrameIndex = 2; // Idle standing default
+    if (m_isPlayerMoving) {
+        int seqIdx = (m_playerAnimTick / 5) % m_walkAnimSequence.size();
+        playerFrameIndex = m_walkAnimSequence[seqIdx];
+    }
+    QPixmap playerSprite = getAnimationFrame(m_playerFrames, playerFrameIndex);
 
-    // Drop Shadow
-    painter.setBrush(QColor(0, 0, 0, 100));
-    painter.setPen(Qt::NoPen);
-    painter.drawEllipse(QRectF(playerDrawX + tileW * 0.1, playerDrawY + tileH * 0.75, tileW * 0.8, tileH * 0.25));
+    int writerFrameIndex = 2; // Idle standing default
+    if (m_isWriterMoving) {
+        int seqIdx = (m_writerAnimTick / 5) % m_walkAnimSequence.size();
+        writerFrameIndex = m_walkAnimSequence[seqIdx];
+    }
+    QPixmap writerSprite = getAnimationFrame(m_writerFrames, writerFrameIndex);
 
-    // Player Sprite Body
-    painter.setBrush(QColor(180, 50, 50));
-    painter.setPen(QPen(QColor(20, 20, 20), 2));
-    painter.drawRect(QRectF(playerDrawX + tileW * 0.25, playerDrawY + tileH * 0.2, tileW * 0.5, tileH * 0.65));
+    // 5. Y-Depth Sorting for Rendering (lower Y renders behind higher Y)
+    struct CharacterEntity {
+        double x, y;
+        QPixmap sprite;
+    };
 
-    // 5. Fixed Screen HUD
+    QVector<CharacterEntity> entities = {
+        {m_playerX, m_playerY, playerSprite},
+        {m_writerX, m_writerY, writerSprite}
+    };
+
+    std::sort(entities.begin(), entities.end(), [](const CharacterEntity &a, const CharacterEntity &b) {
+        return a.y < b.y;
+    });
+
+    // Render Characters
+    for (const auto &charEntity : entities) {
+        double drawX = (charEntity.x - cameraX) * tileW;
+        double drawY = (charEntity.y - cameraY) * tileH;
+
+        // Maintain original 19:49 aspect ratio relative to tile width
+        double spriteW = tileW * 1.1;
+        double spriteH = spriteW * (49.0 / 19.0);
+
+        // Center sprite horizontally on tile, align feet to bottom of tile
+        double spriteX = drawX + (tileW - spriteW) / 2.0;
+        double spriteY = drawY + tileH - spriteH;
+
+        QRectF destRect(spriteX, spriteY, spriteW, spriteH);
+
+        // Ground Drop Shadow
+        painter.setBrush(QColor(0, 0, 0, 80));
+        painter.setPen(Qt::NoPen);
+        painter.drawEllipse(QRectF(drawX + tileW * 0.1, drawY + tileH * 0.75, tileW * 0.8, tileH * 0.25));
+
+        if (!charEntity.sprite.isNull()) {
+            painter.drawPixmap(destRect, charEntity.sprite, charEntity.sprite.rect());
+        }
+    }
+
+    // 6. Fixed Screen HUD
     if (m_player) {
         painter.setBrush(QColor(20, 18, 15, 220));
         painter.setPen(QPen(QColor(140, 109, 70), 2));

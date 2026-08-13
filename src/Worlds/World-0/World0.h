@@ -22,6 +22,7 @@ protected:
 private:
     void updateMovement();
     QPixmap getTilePixmap(char tileType) const;
+    QPixmap getAnimationFrame(const QPixmap &sheet, int frameIndex) const;
 
     QTimer *m_gameLoopTimer;
     QSet<int> m_activeKeys;
@@ -29,6 +30,15 @@ private:
     double m_playerX = 5.0;
     double m_playerY = 5.0;
     double m_moveSpeed = 0.08;
+    int m_playerAnimTick = 0;
+    bool m_isPlayerMoving = false;
+
+    double m_writerX = 5.0;
+    double m_writerY = 6.0;
+    int m_writerAnimTick = 0;
+    bool m_isWriterMoving = false;
+
+    const QVector<int> m_walkAnimSequence = {2, 3, 4, 3, 2, 1, 0, 1};
 
     // Wind animation counter for wheat
     int m_windTick = 0;
@@ -76,6 +86,9 @@ private:
     };
 
     QPixmap m_mapSquares;
+
+    QPixmap m_playerFrames;
+    QPixmap m_writerFrames;
 };
 
 #endif // WORLD0_H
