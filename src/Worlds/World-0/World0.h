@@ -22,7 +22,7 @@ protected:
 private:
     void updateMovement();
     QPixmap getTilePixmap(char tileType) const;
-    QPixmap getAnimationFrame(const QPixmap &sheet, int frameIndex) const;
+    QPixmap getAnimationFrame(const QPixmap &sheet, int frameIndex, int numFrames) const;
 
     QTimer *m_gameLoopTimer;
     QSet<int> m_activeKeys;

@@ -128,15 +128,15 @@ QPixmap World0::getTilePixmap(char tileType) const {
     return m_mapSquares.copy(srcX, srcY, 8, 8);
 }
 
-QPixmap World0::getAnimationFrame(const QPixmap &sheet, int frameIndex) const {
+QPixmap World0::getAnimationFrame(const QPixmap &sheet, int frameIndex, int numFrames) const {
     if (sheet.isNull()) return QPixmap();
 
     // If image is a single frame instead of a 5-frame sheet
-    if (sheet.width() < 95) {
+    if (sheet.width() == 19) {
         return sheet;
     }
 
-    int totalFrames = 5;
+    int totalFrames = numFrames;
     int frameWidth = sheet.width() / totalFrames; // 95 / 5 = 19px
     int frameHeight = sheet.height();             // 49px
 
@@ -196,14 +196,14 @@ void World0::paintEvent(QPaintEvent *event) {
         int seqIdx = (m_playerAnimTick / 5) % m_walkAnimSequence.size();
         playerFrameIndex = m_walkAnimSequence[seqIdx];
     }
-    QPixmap playerSprite = getAnimationFrame(m_playerFrames, playerFrameIndex);
+    QPixmap playerSprite = getAnimationFrame(m_playerFrames, playerFrameIndex, 5);
 
     int writerFrameIndex = 2; // Idle standing default
     if (m_isWriterMoving) {
         int seqIdx = (m_writerAnimTick / 5) % m_walkAnimSequence.size();
         writerFrameIndex = m_walkAnimSequence[seqIdx];
     }
-    QPixmap writerSprite = getAnimationFrame(m_writerFrames, writerFrameIndex);
+    QPixmap writerSprite = getAnimationFrame(m_writerFrames, writerFrameIndex, 5);
 
     // 5. Y-Depth Sorting for Rendering (lower Y renders behind higher Y)
     struct CharacterEntity {
@@ -264,7 +264,10 @@ void World0::paintEvent(QPaintEvent *event) {
 
             // 3. Overlay Wheat Leg Blocker over full sprite area when in wheat
             if (inWheat && !m_wheatBlocking.isNull()) {
-                QPixmap blockerFrame = getAnimationFrame(m_wheatBlocking, charEntity.frameIndex);
+                int blockerSeqIdx = (m_windTick / 18) % m_wheatAnimSequence.size();
+                int blockerFrameIndex = m_wheatAnimSequence[blockerSeqIdx];
+
+                QPixmap blockerFrame = getAnimationFrame(m_wheatBlocking, blockerFrameIndex, 3);
                 painter.drawPixmap(fullDestRect, blockerFrame, blockerFrame.rect());
             }
         }
