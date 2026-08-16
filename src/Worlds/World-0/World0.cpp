@@ -16,6 +16,7 @@ World0::World0(Player *player, QWidget *parent)
     m_mapSquares.load(":assets/Worlds/World0/World-0Dirtpath.png");
     m_playerFrames.load(":assets/Worlds/PlayerWalkingFarmerAnim.png");
     m_writerFrames.load(":assets/Worlds/WriterWalkingAnim.png");
+    m_wheatBlocking.load(":assets/Worlds/World0/WheatLegBlocker.png");
 
     m_gameLoopTimer = new QTimer(this);
     connect(m_gameLoopTimer, &QTimer::timeout, this, [this]() {
@@ -130,6 +131,11 @@ QPixmap World0::getTilePixmap(char tileType) const {
 QPixmap World0::getAnimationFrame(const QPixmap &sheet, int frameIndex) const {
     if (sheet.isNull()) return QPixmap();
 
+    // If image is a single frame instead of a 5-frame sheet
+    if (sheet.width() < 95) {
+        return sheet;
+    }
+
     int totalFrames = 5;
     int frameWidth = sheet.width() / totalFrames; // 95 / 5 = 19px
     int frameHeight = sheet.height();             // 49px
@@ -203,11 +209,12 @@ void World0::paintEvent(QPaintEvent *event) {
     struct CharacterEntity {
         double x, y;
         QPixmap sprite;
+        int frameIndex;
     };
 
     QVector<CharacterEntity> entities = {
-        {m_playerX, m_playerY, playerSprite},
-        {m_writerX, m_writerY, writerSprite}
+        {m_playerX, m_playerY, playerSprite, playerFrameIndex},
+        {m_writerX, m_writerY, writerSprite, writerFrameIndex}
     };
 
     std::sort(entities.begin(), entities.end(), [](const CharacterEntity &a, const CharacterEntity &b) {
@@ -227,15 +234,39 @@ void World0::paintEvent(QPaintEvent *event) {
         double spriteX = drawX + (tileW - spriteW) / 2.0;
         double spriteY = drawY + tileH - spriteH;
 
-        QRectF destRect(spriteX, spriteY, spriteW, spriteH);
+        QRectF fullDestRect(spriteX, spriteY, spriteW, spriteH);
 
-        // Ground Drop Shadow
-        painter.setBrush(QColor(0, 0, 0, 80));
-        painter.setPen(Qt::NoPen);
-        painter.drawEllipse(QRectF(drawX + tileW * 0.1, drawY + tileH * 0.75, tileW * 0.8, tileH * 0.25));
+        // State-Based Foliage Check: Is character standing in wheat ('0')?
+        int tileX = static_cast<int>(std::floor(charEntity.x));
+        int tileY = static_cast<int>(std::floor(charEntity.y));
+
+        bool inWheat = (tileY >= 0 && tileY < m_gridRows &&
+                        tileX >= 0 && tileX < m_gridCols &&
+                        m_mapGrid[tileY][tileX] == '0');
 
         if (!charEntity.sprite.isNull()) {
-            painter.drawPixmap(destRect, charEntity.sprite, charEntity.sprite.rect());
+            QRectF srcRect = charEntity.sprite.rect();
+            QRectF charDestRect = fullDestRect;
+
+            if (inWheat) {
+                // 1. Crop lower 28% off both source and destination rects
+                srcRect.setHeight(srcRect.height() * 0.72);
+                charDestRect.setHeight(spriteH * 0.72);
+            } else {
+                // Render Ground Drop Shadow when on normal dirt path
+                painter.setBrush(QColor(0, 0, 0, 80));
+                painter.setPen(Qt::NoPen);
+                painter.drawEllipse(QRectF(drawX + tileW * 0.1, drawY + tileH * 0.75, tileW * 0.8, tileH * 0.25));
+            }
+
+            // 2. Draw Cropped Character Sprite
+            painter.drawPixmap(charDestRect, charEntity.sprite, srcRect);
+
+            // 3. Overlay Wheat Leg Blocker over full sprite area when in wheat
+            if (inWheat && !m_wheatBlocking.isNull()) {
+                QPixmap blockerFrame = getAnimationFrame(m_wheatBlocking, charEntity.frameIndex);
+                painter.drawPixmap(fullDestRect, blockerFrame, blockerFrame.rect());
+            }
         }
     }
 

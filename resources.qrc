@@ -21,6 +21,7 @@
 
         <!-- World0 Frames -->
         <file>assets/Worlds/World0/World-0Dirtpath.png</file>
+        <file>assets/Worlds/World0/WheatLegBlocker.png</file>
         <file>assets/Worlds/PlayerWalkingFarmerAnim.png</file>
         <file>assets/Worlds/WriterWalkingAnim.png</file>
     </qresource>
