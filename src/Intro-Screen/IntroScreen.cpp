@@ -247,11 +247,11 @@ void IntroScreen::setupUI() {
         {"Farmer", "How so?"},
         {"???", "By writing you a charter of nobility. It will state you are of noble blood."},
         {"Farmer", "You can write?"},
-        {"???", "Of course. It's my profession."},
+        {"Paul", "Of course. It's my profession. I am Paul the Writer."},
         {"Farmer", "How will I ever repay you?"},
-        {"???", "With gold of course!"},
+        {"Paul", "With gold of course!"},
         {"Farmer", "I am but a farmer. I have no gold to give."},
-        {"???", "Then your story will do. I will acompany you on your jounrey. Let it begin with your heading the town over yonder where I'll introduce the world to Sir..."}};
+        {"Paul", "Then your story will do. I will acompany you on your jounrey. Let it begin with your heading the town over yonder where I'll introduce the world to Sir..."}};
 
     connect(m_continueBtn, &QPushButton::clicked, this, &IntroScreen::advanceDialogue);
 }
